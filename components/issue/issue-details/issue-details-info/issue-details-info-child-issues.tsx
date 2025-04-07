@@ -56,13 +56,15 @@ const ChildIssueList: React.FC<{
     }
     createIssue(
       {
-        name,
-        type,
-        parentId,
-        sprintId: null,
-        reporterId: null,
-        assigneeId: null,
-        userId: null,
+        data: {
+          name,
+          type,
+          parentId,
+          sprintId: null,
+          reporterId: null,
+          assigneeId: null,
+          userId: null,
+        },
       },
       {
         onSuccess: () => {

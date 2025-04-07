@@ -20,7 +20,7 @@ const usePostIssue = () => {
           return;
         }
         toast.error({
-          message: `Something went wrong while creating the issue ${createdIssue.name}`,
+          message: `Something went wrong while creating the issue ${createdIssue.data.name}`,
           description: "Please try again later.",
         });
       },

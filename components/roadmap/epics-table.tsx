@@ -65,15 +65,17 @@ const EpicsTable: React.FC = () => {
     }
     createIssue(
       {
-        name,
-        type,
-        parentId,
-        sprintId: null,
-        // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-        reporterId: user!.id,
-        sprintColor,
-        assigneeId: null, // Provide a default value or fetch dynamically
-        userId: null, // Assuming the current user's ID is appropriate
+        data: {
+          name,
+          type,
+          parentId,
+          sprintId: null,
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          reporterId: user!.id,
+          sprintColor,
+          assigneeId: null, // Provide a default value or fetch dynamically
+          userId: user?.id ?? null, // Assuming the current user's ID is appropriate}
+        },
       },
       {
         onSuccess: () => {

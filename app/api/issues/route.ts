@@ -121,10 +121,12 @@ export async function POST(req: NextRequest) {
 
   const data = body.data;
 
+  console.log("Issues Data coming: ", data);
+
   const validated = postIssuesBodyValidator.safeParse(data);
 
   if (!validated.success) {
-    console.log("Validation Error: ", validated.error.errors);
+    console.log("Validation Error: ", validated.error);
     const message =
       "Invalid body. " + (validated.error.errors[0]?.message ?? "");
     return new Response(message, { status: 400 });

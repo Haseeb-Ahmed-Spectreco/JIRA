@@ -22,6 +22,7 @@ const IssueList: React.FC<{ sprintId: string | null; issues: IssueType[] }> = ({
   const [isEditing, setIsEditing] = useState(false);
   const [droppableEnabled] = useStrictModeDroppable();
   const [isAuthenticated, openAuthModal] = useIsAuthenticated();
+  console.log("User creating issue: ", user);
 
   if (!droppableEnabled) {
     return null;
@@ -45,13 +46,15 @@ const IssueList: React.FC<{ sprintId: string | null; issues: IssueType[] }> = ({
 
     createIssue(
       {
-        name,
-        type,
-        parentId: null,
-        sprintId,
-        reporterId: user?.id ?? null,
-        assigneeId: null,
-        userId: null,
+        data: {
+          name,
+          type,
+          parentId: null,
+          sprintId,
+          reporterId: user?.id ?? null,
+          assigneeId: null,
+          userId: user?.id ?? null,
+        },
       },
       {
         onSuccess: () => {

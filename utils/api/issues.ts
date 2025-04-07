@@ -41,7 +41,8 @@ export const issuesRoutes = {
     );
     return data?.issue;
   },
-  postIssue: async (body: PostIssueBody) => {
+  postIssue: async (body: { data: PostIssueBody }) => {
+    console.log("Post issue body: ", body);
     const { data } = await axios.post<PostIssueResponse>(
       `${baseUrl}/api/issues`,
       body,
