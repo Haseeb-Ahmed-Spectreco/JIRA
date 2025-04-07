@@ -53,6 +53,7 @@ type IssueT = Issue & {
   };
   assignee: DefaultUser | null;
   reporter: DefaultUser | null;
+  userId: string | null;
 };
 
 export type GetIssuesResponse = {
