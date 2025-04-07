@@ -68,6 +68,7 @@ type ParamsType = {
 
 export async function PATCH(req: NextRequest, { params }: ParamsType) {
   const { userId } = getAuth(req);
+  console.log("User ID patching issue: ", userId);
   if (!userId) return new Response("Unauthenticated request", { status: 403 });
   const { success } = await ratelimit.limit(userId);
   if (!success) return new Response("Too many requests", { status: 429 });
@@ -115,11 +116,26 @@ export async function PATCH(req: NextRequest, { params }: ParamsType) {
   });
 
   if (issue.assigneeId) {
-    const assignee = await clerkClient.users.getUser(issue.assigneeId);
-    const assigneeForClient = filterUserForClient(assignee);
-    return NextResponse.json({
-      issue: { ...issue, assignee: assigneeForClient },
-    });
+    try {
+      const assignee = await clerkClient.users.getUser(issue.assigneeId);
+      const assigneeForClient = filterUserForClient(assignee);
+      return NextResponse.json({
+        issue: { ...issue, assignee: assigneeForClient },
+      });
+    } catch (error) {
+      console.error("Error fetching assignee from Clerk: ", error);
+      const assignee = await prisma.defaultUser.findUnique({
+        where: {
+          id: issue.assigneeId,
+        },
+      });
+      if (assignee) {
+        return NextResponse.json({
+          issue: { ...issue, assignee },
+        });
+      }
+      return new Response("Error fetching assignee", { status: 500 });
+    }
   }
 
   // return NextResponse.json<PostIssueResponse>({ issue });

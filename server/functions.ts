@@ -1,4 +1,4 @@
-import { generateIssuesForClient } from "@/utils/helpers";
+import { filterUserForClient, generateIssuesForClient } from "@/utils/helpers";
 import { type UserResource } from "@clerk/types";
 import {
   defaultUsers,
@@ -8,7 +8,7 @@ import {
 } from "../prisma/seed-data";
 import { prisma } from "./db";
 import { SprintStatus } from "@prisma/client";
-
+import { clerkClient } from "@clerk/nextjs";
 export async function getInitialIssuesFromServer(
   userId: UserResource["id"] | undefined | null
 ) {
@@ -46,29 +46,30 @@ export async function getInitialIssuesFromServer(
     // },
   });
 
-  // const userIds = activeIssues
-  //   .flatMap((issue) => [issue.assigneeId, issue.reporterId] as string[])
-  //   .filter(Boolean);
+  const userIds = activeIssues
+    .flatMap((issue) => [issue.assigneeId, issue.reporterId] as string[])
+    .filter(Boolean);
 
   // USE THIS IF RUNNING LOCALLY ----------------------
   const users = await prisma.defaultUser.findMany({
-    // where: {
-    //   id: {
-    //     in: userIds,
-    //   },
-    // },
+    where: {
+      id: {
+        in: userIds,
+      },
+    },
   });
   // --------------------------------------------------
 
   // COMMENT THIS IF RUNNING LOCALLY ------------------
-  // const users = (
-  //   await clerkClient.users.getUserList({
-  //     userId: userIds,
-  //     limit: 20,
-  //   })
-  // ).map(filterUserForClient);
+  const clerkUsers = (
+    await clerkClient.users.getUserList({
+      userId: userIds,
+      limit: 20,
+    })
+  ).map(filterUserForClient);
   // --------------------------------------------------
 
+  users.push(...clerkUsers);
   const issues = generateIssuesForClient(
     activeIssues,
     users,

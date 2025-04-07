@@ -36,13 +36,15 @@ export async function GET(req: NextRequest, { params }: MembersParams) {
   // --------------------------------------------------
 
   // COMMENT THIS IF RUNNING LOCALLY ------------------
-  // const users = (
-  //   await clerkClient.users.getUserList({
-  //     userId: members.map((member) => member.id),
-  //     limit: 20,
-  //   })
-  // ).map(filterUserForClient);
+  const clerkUsers = (
+    await clerkClient.users.getUserList({
+      userId: members.map((member) => member.id),
+      limit: 20,
+    })
+  ).map(filterUserForClient);
   // --------------------------------------------------
+
+  users.push(...clerkUsers);
 
   // return NextResponse.json<GetProjectMembersResponse>({ members:users });
   return NextResponse.json({ members: users });

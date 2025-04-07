@@ -38,6 +38,7 @@ CREATE TABLE "Issue" (
     "key" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "description" TEXT,
+    "details" TEXT,
     "status" "IssueStatus" NOT NULL DEFAULT 'TODO',
     "type" "IssueType" NOT NULL DEFAULT 'TASK',
     "sprintPosition" DOUBLE PRECISION NOT NULL,
@@ -112,3 +113,6 @@ CREATE UNIQUE INDEX "Issue_key_creatorId_key" ON "Issue"("key", "creatorId");
 
 -- CreateIndex
 CREATE INDEX "Comment_issueId_idx" ON "Comment"("issueId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "DefaultUser_email_key" ON "DefaultUser"("email");
