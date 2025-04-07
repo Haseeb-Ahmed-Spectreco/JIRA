@@ -72,6 +72,8 @@ const EpicsTable: React.FC = () => {
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         reporterId: user!.id,
         sprintColor,
+        assigneeId: null, // Provide a default value or fetch dynamically
+        userId: null, // Assuming the current user's ID is appropriate
       },
       {
         onSuccess: () => {
