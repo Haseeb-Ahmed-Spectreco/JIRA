@@ -173,7 +173,6 @@ export function generateIssuesForClient(
   // Maps are used to make lookups faster
   const userMap = new Map(users.map((user) => [user.id, user]));
   const parentMap = new Map(issues.map((issue) => [issue.id, issue]));
-  console.log("User Map", userMap);
 
   const issuesForClient = issues.map((issue) => {
     const parent = parentMap.get(issue.parentId ?? "") ?? null;

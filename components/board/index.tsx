@@ -38,7 +38,7 @@ const Board: React.FC = () => {
   const { sprints } = useSprints();
   const { project } = useProject();
 
-  console.log("Issues: ", issues);
+  console.log("Sprints board index: ", sprints);
 
   const {
     search,

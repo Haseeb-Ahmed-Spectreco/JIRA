@@ -1,6 +1,5 @@
 import { generateIssuesForClient } from "@/utils/helpers";
 import { type UserResource } from "@clerk/types";
-import { clerkClient } from "@clerk/nextjs";
 import {
   defaultUsers,
   generateInitialUserComments,
@@ -90,8 +89,20 @@ export async function getInitialSprintsFromServer(
 ) {
   let sprints = await prisma.sprint.findMany({
     where: {
-      OR: [{ status: SprintStatus.ACTIVE }, { status: SprintStatus.PENDING }],
-      creatorId: userId ?? "init",
+      AND: [
+        {
+          OR: [
+            { status: SprintStatus.ACTIVE },
+            { status: SprintStatus.PENDING },
+          ],
+        },
+        {
+          OR: [
+            { creatorId: userId ?? "init" }, // Check if creatorId is the current user's ID
+            { creatorId: "init" }, // Check if creatorId is "init"
+          ],
+        },
+      ],
     },
     orderBy: {
       createdAt: "asc",

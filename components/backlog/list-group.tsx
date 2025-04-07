@@ -32,6 +32,7 @@ const ListGroup: React.FC<{ className?: string }> = ({ className }) => {
   const [isAuthenticated, openAuthModal] = useIsAuthenticated();
   const { search, assignees, issueTypes, epics } = useFiltersContext();
   const { sprints } = useSprints();
+  console.log("Sprints ListGroup: ", sprints);
 
   const filterIssues = useCallback(
     (issues: IssueType[] | undefined, sprintId: string | null) => {
