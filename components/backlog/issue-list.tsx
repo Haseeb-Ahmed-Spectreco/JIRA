@@ -50,6 +50,8 @@ const IssueList: React.FC<{ sprintId: string | null; issues: IssueType[] }> = ({
         parentId: null,
         sprintId,
         reporterId: user?.id ?? null,
+        assigneeId: null,
+        userId: null,
       },
       {
         onSuccess: () => {
