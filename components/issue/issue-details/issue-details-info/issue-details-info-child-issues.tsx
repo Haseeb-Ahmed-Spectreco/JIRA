@@ -61,6 +61,8 @@ const ChildIssueList: React.FC<{
         parentId,
         sprintId: null,
         reporterId: null,
+        assigneeId: null,
+        userId: null,
       },
       {
         onSuccess: () => {

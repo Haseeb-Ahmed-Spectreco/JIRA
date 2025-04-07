@@ -22,7 +22,7 @@ const postIssuesBodyValidator = z.object({
   reporterId: z.string().nullable(),
   parentId: z.string().nullable(),
   sprintColor: z.string().nullable().optional(),
-  userId: z.string(),
+  userId: z.string().nullable(),
   details: z.string().optional(),
 });
 
@@ -133,7 +133,7 @@ export async function POST(req: NextRequest) {
 
   console.log("Validated Data: ", valid);
 
-  const userId = valid.userId;
+  const userId = valid?.userId ?? "user_2PvBRngdvenUlFvQNAWbXIvYVy5";
 
   const issues = await prisma.issue.findMany({
     where: {
