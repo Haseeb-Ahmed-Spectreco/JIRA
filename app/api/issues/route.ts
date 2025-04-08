@@ -75,7 +75,11 @@ export async function GET() {
     return NextResponse.json({ issues: [] });
   }
 
-  const activeSprints = await prisma.sprint.findMany({});
+  const activeSprints = await prisma.sprint.findMany({
+    // where: {
+    //   status: "ACTIVE",
+    // },
+  });
 
   const userIds = activeIssues
     .flatMap((issue) => [issue.assigneeId, issue.reporterId] as string[])
