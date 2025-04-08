@@ -40,20 +40,7 @@ export async function GET(req: NextRequest) {
   const { userId } = getAuth(req);
   const sprints = await prisma.sprint.findMany({
     where: {
-      AND: [
-        {
-          OR: [
-            { status: SprintStatus.ACTIVE },
-            { status: SprintStatus.PENDING },
-          ],
-        },
-        {
-          OR: [
-            { creatorId: userId ?? "init" }, // Check if creatorId is the current user's ID
-            { creatorId: "init" }, // Check if creatorId is "init"
-          ],
-        },
-      ],
+      OR: [{ status: SprintStatus.ACTIVE }, { status: SprintStatus.PENDING }],
     },
     orderBy: {
       createdAt: "asc",
