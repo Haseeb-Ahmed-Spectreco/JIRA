@@ -143,11 +143,7 @@ export async function POST(req: NextRequest) {
 
   const userId = valid?.userId ?? "user_2PvBRngdvenUlFvQNAWbXIvYVy5";
 
-  const issues = await prisma.issue.findMany({
-    where: {
-      creatorId: userId,
-    },
-  });
+  const issues = await prisma.issue.findMany({});
 
   const currentSprintIssues = issues.filter(
     (issue) => issue.sprintId === valid.sprintId && issue.isDeleted === false
