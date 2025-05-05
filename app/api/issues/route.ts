@@ -61,31 +61,75 @@ export type GetIssuesResponse = {
   issues: IssueT[];
 };
 
-export async function GET() {
-  // const { userId } = { userId: "user_2PvBRngdvenUlFvQNAWbXIvYVy5" };
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  console.log("Issues Body: ", req);
+  const userId = searchParams.get("userId");
 
-  const activeIssues = await prisma.issue.findMany({
-    where: {
-      // creatorId: userId ?? "init",
-      isDeleted: false,
-    },
+  console.log("User ID to get Issues: ", userId);
+
+  const whereIssue = userId
+    ? { creatorId: userId, isDeleted: false }
+    : { isDeleted: false };
+
+  const totalIssues = await prisma.issue.findMany({
+    where: whereIssue,
   });
+  console.log("Total Issues: ", totalIssues, "Length: ", totalIssues.length);
 
-  if (!activeIssues || activeIssues.length === 0) {
+  if (!totalIssues || totalIssues.length === 0) {
     return NextResponse.json({ issues: [] });
   }
+  if (userId) {
+    const limitFromQuery = searchParams.get("limit");
+    const pageFromQuery = searchParams.get("page");
+    const limit = limitFromQuery ? parseInt(limitFromQuery ?? "10") : false;
+    const page = pageFromQuery ? parseInt(pageFromQuery ?? "1") : false;
+    const offset = page && limit ? (page - 1) * limit : 0;
 
-  const activeSprints = await prisma.sprint.findMany({
-    // where: {
-    //   status: "ACTIVE",
-    // },
-  });
+    const activeIssues = await prisma.issue.findMany({
+      where: whereIssue,
+      skip: offset,
 
-  const userIds = activeIssues
+      take: limit || undefined,
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    if (!activeIssues || activeIssues.length === 0) {
+      return NextResponse.json({ issues: [] });
+    }
+
+    console.log("Limit: ", limit, " Page: ", page);
+
+    const activeSprints = await prisma.sprint.findMany({});
+    const users = await prisma.defaultUser.findMany({
+      where: {
+        id: {
+          in: [userId],
+        },
+      },
+    });
+
+    const issuesForClient = generateIssuesForClient(
+      activeIssues,
+      users,
+      activeSprints.map((sprint) => sprint.id)
+    );
+
+    return NextResponse.json({
+      issues: issuesForClient,
+      total: totalIssues.length,
+    });
+  }
+
+  const activeSprints = await prisma.sprint.findMany({});
+
+  const userIds = totalIssues
     .flatMap((issue) => [issue.assigneeId, issue.reporterId] as string[])
     .filter(Boolean);
 
-  // USE THIS IF RUNNING LOCALLY -----------------------
   const users = await prisma.defaultUser.findMany({
     where: {
       id: {
@@ -94,29 +138,21 @@ export async function GET() {
     },
   });
 
-  // --------------------------------------------------
-
-  // COMMENT THIS IF RUNNING LOCALLY ------------------
-
   const clerkUsers = (
     await clerkClient.users.getUserList({
       userId: userIds,
       limit: 10,
     })
   ).map(filterUserForClient);
-  // --------------------------------------------------
 
   users.push(...clerkUsers);
 
-  console.log("Users Found: ", users);
-
   const issuesForClient = generateIssuesForClient(
-    activeIssues,
+    totalIssues,
     users,
     activeSprints.map((sprint) => sprint.id)
   );
 
-  // const issuesForClient = await getIssuesFromServer();
   return NextResponse.json({ issues: issuesForClient });
 }
 

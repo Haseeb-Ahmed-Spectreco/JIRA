@@ -167,10 +167,9 @@ export function hexToRgba(hex: string | null, opacity?: number) {
 
 export function generateIssuesForClient(
   issues: Issue[],
-  users: DefaultUser[],
+  users: DefaultUser [],
   activeSprintIds?: string[]
 ) {
-  // Maps are used to make lookups faster
   const userMap = new Map(users.map((user) => [user.id, user]));
   const parentMap = new Map(issues.map((issue) => [issue.id, issue]));
 
@@ -188,7 +187,11 @@ export function generateIssuesForClient(
     return { ...issue, sprintIsActive, parent, assignee, reporter, children };
   });
 
-  return issuesForClient as IssueType[];
+  return issuesForClient.sort((a, b) => {
+    const dateA = new Date(a.createdAt).getTime();
+    const dateB = new Date(b.createdAt).getTime();
+    return dateB - dateA; // Descending order
+  }) as IssueType[];
 }
 
 export function calculateInsertPosition(issues: Issue[]) {
