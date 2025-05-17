@@ -268,12 +268,14 @@ export async function PUT(req: NextRequest) {
           id: issue.id,
         },
         data: {
-          type: valid.type ?? undefined,
-          status: valid.status ?? undefined,
-          assigneeId: valid.assigneeId ?? undefined,
-          reporterId: valid.reporterId ?? undefined,
-          sprintId: valid.sprintId === undefined ? undefined : valid.sprintId,
-          parentId: valid.parentId ?? undefined,
+          name: valid?.name ?? issue?.name ?? null,
+          details: valid?.details ?? issue?.details ?? null,
+          type: valid?.type ?? issue?.type ?? null,
+          status: valid?.status ?? issue?.status ?? null,
+          assigneeId: valid?.assigneeId ?? issue?.assigneeId ?? undefined,
+          reporterId: valid?.reporterId ?? issue?.reporterId ?? undefined,
+          sprintId: valid?.sprintId  ?? issue?.sprintId ?? undefined,
+          parentId: valid?.parentId ?? issue?.parentId ?? undefined,
         },
       });
     })
