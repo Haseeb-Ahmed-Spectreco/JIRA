@@ -237,7 +237,6 @@ export async function PUT(req: NextRequest) {
   const data = body.data;
   const validated = patchIssuesBodyValidator.safeParse(data);
 
-
   if (!validated.success) {
     // eslint-disable-next-line
     const message = "Invalid body. " + validated.error.errors[0]?.message;
