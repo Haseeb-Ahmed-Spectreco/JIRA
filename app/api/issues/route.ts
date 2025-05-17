@@ -30,16 +30,16 @@ const postIssuesBodyValidator = z.object({
 export type PostIssueBody = z.infer<typeof postIssuesBodyValidator>;
 
 const patchIssuesBodyValidator = z.object({
-  name: z.string(),
-  type: z.enum(["BUG", "STORY", "TASK", "EPIC", "SUBTASK"]),
-  ids: z.array(z.string()).nullable(),
-  assigneeId: z.string().nullable(),
+  name: z.string().optional(),
+  type: z.enum(["BUG", "STORY", "TASK", "EPIC", "SUBTASK"]).optional(),
+  ids: z.array(z.string()).nullable().optional(),
+  assigneeId: z.string().nullable().optional(),
   status: z.enum(["TODO", "IN_PROGRESS", "DONE"]).optional(),
-  sprintId: z.string().nullable(),
-  reporterId: z.string().nullable(),
-  parentId: z.string().nullable(),
+  sprintId: z.string().nullable().optional(),
+  reporterId: z.string().nullable().optional(),
+  parentId: z.string().nullable().optional(),
   sprintColor: z.string().nullable().optional(),
-  userId: z.string().nullable(),
+  userId: z.string().nullable().optional(),
   details: z.string().optional(),
 });
 
