@@ -30,15 +30,17 @@ const postIssuesBodyValidator = z.object({
 export type PostIssueBody = z.infer<typeof postIssuesBodyValidator>;
 
 const patchIssuesBodyValidator = z.object({
-  ids: z.array(z.string()),
-  type: z.nativeEnum(IssueType).optional(),
-  status: z.nativeEnum(IssueStatus).optional(),
-  assigneeId: z.string().nullable().optional(),
-  reporterId: z.string().optional(),
-  parentId: z.string().nullable().optional(),
-  sprintId: z.string().nullable().optional(),
+  name: z.string(),
+  type: z.enum(["BUG", "STORY", "TASK", "EPIC", "SUBTASK"]),
+  ids: z.array(z.string()).nullable(),
+  assigneeId: z.string().nullable(),
+  status: z.enum(["TODO", "IN_PROGRESS", "DONE"]).optional(),
+  sprintId: z.string().nullable(),
+  reporterId: z.string().nullable(),
+  parentId: z.string().nullable(),
+  sprintColor: z.string().nullable().optional(),
   userId: z.string().nullable(),
-  isDeleted: z.boolean().optional(),
+  details: z.string().optional(),
 });
 
 export type PatchIssuesBody = z.infer<typeof patchIssuesBodyValidator>;
@@ -251,7 +253,7 @@ export async function PATCH(req: NextRequest) {
   const issuesToUpdate = await prisma.issue.findMany({
     where: {
       id: {
-        in: valid.ids,
+        in: valid.ids ?? [],
       },
     },
   });
@@ -267,7 +269,6 @@ export async function PATCH(req: NextRequest) {
           status: valid.status ?? undefined,
           assigneeId: valid.assigneeId ?? undefined,
           reporterId: valid.reporterId ?? undefined,
-          isDeleted: valid.isDeleted ?? undefined,
           sprintId: valid.sprintId === undefined ? undefined : valid.sprintId,
           parentId: valid.parentId ?? undefined,
         },
