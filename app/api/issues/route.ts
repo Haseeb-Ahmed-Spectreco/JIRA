@@ -32,7 +32,7 @@ export type PostIssueBody = z.infer<typeof postIssuesBodyValidator>;
 const patchIssuesBodyValidator = z.object({
   name: z.string().optional(),
   type: z.enum(["BUG", "STORY", "TASK", "EPIC", "SUBTASK"]).optional(),
-  ids: z.array(z.string()).optional(),
+  ids: z.array(z.string()),
   assigneeId: z.string().nullable().optional(),
   status: z.enum(["TODO", "IN_PROGRESS", "DONE"]).optional(),
   sprintId: z.string().nullable().optional(),
