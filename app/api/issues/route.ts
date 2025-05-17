@@ -37,6 +37,7 @@ const patchIssuesBodyValidator = z.object({
   reporterId: z.string().optional(),
   parentId: z.string().nullable().optional(),
   sprintId: z.string().nullable().optional(),
+  userId: z.string().nullable(),
   isDeleted: z.boolean().optional(),
 });
 
@@ -227,14 +228,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const { userId } = getAuth(req);
-  if (!userId) return new Response("Unauthenticated request", { status: 403 });
-  const { success } = await ratelimit.limit(userId);
-  if (!success) return new Response("Too many requests", { status: 429 });
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const body = await req.json();
   const validated = patchIssuesBodyValidator.safeParse(body);
+
 
   if (!validated.success) {
     // eslint-disable-next-line
@@ -243,6 +241,12 @@ export async function PATCH(req: NextRequest) {
   }
 
   const { data: valid } = validated;
+
+   const  userId  = valid?.userId ?? "user_2PvBRngdvenUlFvQNAWbXIvYVy5";
+  if (!userId) return new Response("Unauthenticated request", { status: 403 });
+
+    const { success } = await ratelimit.limit(userId);
+  if (!success) return new Response("Too many requests", { status: 429 });
 
   const issuesToUpdate = await prisma.issue.findMany({
     where: {

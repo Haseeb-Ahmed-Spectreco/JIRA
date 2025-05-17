@@ -13,7 +13,7 @@ const TopNavbar: React.FC = () => {
         <div className="relative mr-2 h-[50px] w-[150px]">
           <Image
             priority={true}
-            src="https://cdn-ilcaioh.nitrocdn.com/tVywMbvOOHDiGAOcynXdoFQXNDRISAkU/assets/images/optimized/rev-a07785e/spectreco.com/wp-content/uploads/2024/06/logo.png"
+            src="https://cdn-ilcaioh.nitrocdn.com/tVywMbvOOHDiGAOcynXdoFQXNDRISAkU/assets/images/optimized/rev-9ba3d72/spectreco.com/wp-content/uploads/2024/06/logo.png"
             alt="Jira logo"
             fill
             sizes="(max-width: 300px) 100px, 150px"
