@@ -293,9 +293,9 @@ export async function PUT(req: NextRequest) {
 }
 
  export async function DELETE(req : NextRequest) {
-    const body = (await req.json()) as { data: DeleteIssueBody };
+    const body = (await req.json()) as  DeleteIssueBody ;
 
-    const data = body.data;
+    const data = body;
     console.log("Issues Data coming: ", data);
     const validated = deleteIssueBodyValidator.safeParse(data);
 
