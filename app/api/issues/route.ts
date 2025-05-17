@@ -229,7 +229,7 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ issue });
 }
 
-export async function PATCH(req: NextRequest) {
+export async function PUT(req: NextRequest) {
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const body = await req.json();
