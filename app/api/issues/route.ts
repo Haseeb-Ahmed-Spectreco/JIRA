@@ -232,8 +232,10 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-  const body = await req.json();
-  const validated = patchIssuesBodyValidator.safeParse(body);
+  const body = (await req.json()) as { data: PatchIssuesBody };
+
+  const data = body.data;
+  const validated = patchIssuesBodyValidator.safeParse(data);
 
 
   if (!validated.success) {
