@@ -243,6 +243,8 @@ export async function PATCH(req: NextRequest) {
   }
 
   const { data: valid } = validated;
+    console.log("Issues Data coming: ", valid);
+
 
    const  userId  = valid?.userId ?? "user_2PvBRngdvenUlFvQNAWbXIvYVy5";
   if (!userId) return new Response("Unauthenticated request", { status: 403 });
