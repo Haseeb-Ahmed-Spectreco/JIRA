@@ -1,13 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma, ratelimit } from "@/server/db";
 import {
-  IssueType,
   type Issue,
-  IssueStatus,
   type DefaultUser,
 } from "@prisma/client";
 import { z } from "zod";
-import { clerkClient, getAuth } from "@clerk/nextjs/server";
+import { clerkClient } from "@clerk/nextjs/server";
 import {
   calculateInsertPosition,
   filterUserForClient,
@@ -298,6 +296,7 @@ export async function PUT(req: NextRequest) {
     const body = (await req.json()) as { data: DeleteIssueBody };
 
     const data = body.data;
+    console.log("Issues Data coming: ", data);
     const validated = deleteIssueBodyValidator.safeParse(data);
 
     if (!validated.success) {
@@ -307,7 +306,7 @@ export async function PUT(req: NextRequest) {
     }
 
     const { data: valid } = validated;
-    console.log("Issues Data coming: ", valid);
+    console.log("Issues Data validated: ", valid);
 
     const issuesDeleted = await prisma.issue.deleteMany({
       where: {
