@@ -43,7 +43,15 @@ const patchIssuesBodyValidator = z.object({
   details: z.string().optional(),
 });
 
+
+
 export type PatchIssuesBody = z.infer<typeof patchIssuesBodyValidator>;
+
+
+const deleteIssueBodyValidator = z.object({
+  ids: z.array(z.string()),   });
+
+export type DeleteIssueBody = z.infer<typeof deleteIssueBodyValidator>;
 
 type IssueT = Issue & {
   children: IssueT[];
@@ -281,6 +289,35 @@ export async function PUT(req: NextRequest) {
     })
   );
 
+ 
   // return NextResponse.json<PostIssueResponse>({ issue });
   return NextResponse.json({ issues: updatedIssues });
 }
+
+ export async function DELETE(req : NextRequest) {
+    const body = (await req.json()) as { data: DeleteIssueBody };
+
+    const data = body.data;
+    const validated = deleteIssueBodyValidator.safeParse(data);
+
+    if (!validated.success) {
+      // eslint-disable-next-line
+      const message = "Invalid body. " + validated.error.errors[0]?.message;
+      return new Response(message, { status: 400 });
+    }
+
+    const { data: valid } = validated;
+    console.log("Issues Data coming: ", valid);
+
+    const issuesDeleted = await prisma.issue.deleteMany({
+      where: {
+        id: {
+          in: valid.ids ?? [],
+        },
+      },
+    });
+
+      return NextResponse.json({ issues: issuesDeleted });
+
+  }
+
