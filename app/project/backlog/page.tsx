@@ -18,6 +18,8 @@ const BacklogPage = async () => {
   const user = await currentUser();
   const queryClient = getQueryClient();
 
+  console.log("User Data: ", user)
+
   await Promise.all([
     await queryClient.prefetchQuery(["issues"], () =>
       getInitialIssuesFromServer(user?.id)

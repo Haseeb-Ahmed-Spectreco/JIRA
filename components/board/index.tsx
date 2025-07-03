@@ -1,6 +1,5 @@
 "use client";
 import React, { Fragment, useCallback, useLayoutEffect, useRef } from "react";
-import { type IssueStatus } from "@prisma/client";
 import "@/styles/split.css";
 import { BoardHeader } from "./header";
 import {
@@ -28,6 +27,7 @@ import { useSprints } from "@/hooks/query-hooks/use-sprints";
 import { useProject } from "@/hooks/query-hooks/use-project";
 import { useFiltersContext } from "@/context/use-filters-context";
 import { useIsAuthenticated } from "@/hooks/use-is-authed";
+import { type IssueStatus } from "@/types/enum";
 
 const STATUSES: IssueStatus[] = ["TODO", "IN_PROGRESS", "DONE"];
 

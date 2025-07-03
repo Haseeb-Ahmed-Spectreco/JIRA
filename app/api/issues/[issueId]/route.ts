@@ -1,9 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma, ratelimit } from "@/server/db";
 import {
-  IssueStatus,
   type Issue,
-  IssueType,
   type DefaultUser,
 } from "@prisma/client";
 import { z } from "zod";
@@ -11,6 +9,7 @@ import { type GetIssuesResponse } from "../route";
 import { clerkClient } from "@clerk/nextjs";
 import { filterUserForClient } from "@/utils/helpers";
 import { getAuth } from "@clerk/nextjs/server";
+import { IssueStatus, IssueType } from "@/types/enum";
 
 export type GetIssueDetailsResponse = {
   issue: GetIssuesResponse["issues"][number] | null;
@@ -76,13 +75,15 @@ export async function PATCH(req: NextRequest, { params }: ParamsType) {
 
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const body = await req.json();
+  console.log("Issues Body: ", body)
   const validated = patchIssueBodyValidator.safeParse(body);
-
+console.log("Issues Validated: ", validated)
   if (!validated.success) {
     // eslint-disable-next-line
     const message = "Invalid body. " + validated.error.errors[0]?.message;
     return new Response(message, { status: 400 });
   }
+
   const { data: valid } = validated;
 
   const currentIssue = await prisma.issue.findUnique({

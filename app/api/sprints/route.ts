@@ -1,6 +1,7 @@
 import { prisma, ratelimit } from "@/server/db";
+import { SprintStatus } from "@/types/enum";
 import { getAuth } from "@clerk/nextjs/server";
-import { SprintStatus, type Sprint } from "@prisma/client";
+import {  type Sprint } from "@prisma/client";
 import { type NextRequest, NextResponse } from "next/server";
 
 export type PostSprintResponse = {
@@ -37,7 +38,6 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const { userId } = getAuth(req);
   const sprints = await prisma.sprint.findMany({
     where: {
       OR: [{ status: SprintStatus.ACTIVE }, { status: SprintStatus.PENDING }],

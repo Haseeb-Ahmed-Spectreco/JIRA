@@ -7,8 +7,8 @@ import {
   generateInitialUserSprints,
 } from "../prisma/seed-data";
 import { prisma } from "./db";
-import { SprintStatus } from "@prisma/client";
 import { clerkClient } from "@clerk/nextjs";
+import { SprintStatus } from "@/types/enum";
 export async function getInitialIssuesFromServer(
   userId: UserResource["id"] | undefined | null
 ) {
@@ -88,6 +88,8 @@ export async function getInitialProjectFromServer() {
 export async function getInitialSprintsFromServer(
   userId: UserResource["id"] | undefined
 ) {
+    console.log("Status: ", SprintStatus)
+
   let sprints = await prisma.sprint.findMany({
     where: {
       OR: [{ status: SprintStatus.ACTIVE }, { status: SprintStatus.PENDING }],

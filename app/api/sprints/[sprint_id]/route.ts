@@ -1,8 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { prisma, ratelimit } from "@/server/db";
-import { SprintStatus, type Sprint } from "@prisma/client";
+import {  type Sprint } from "@prisma/client";
 import { z } from "zod";
 import { getAuth } from "@clerk/nextjs/server";
+import { SprintStatus } from "@/types/enum";
 
 const patchSprintBodyValidator = z.object({
   name: z.string().optional(),

@@ -9,8 +9,8 @@ export function getBaseUrl() {
   if (typeof window === "undefined") {
     return ""; // SSR should use vercel url\// SSR should use vercel url\
   }
-  return `https://jira-rust.vercel.app/`;
-  // return `http://localhost:${process.env.PORT ?? 3000}`;
+  // return `https://jira-rust.vercel.app/`;
+  return `http://localhost:${process.env.PORT ?? 3000}`;
 }
 
 export function getHeaders() {
@@ -33,7 +33,7 @@ export function capitalizeMany(str: string) {
 export function getIssueCountByStatus(issues: IssueType[]) {
   return issues.reduce(
     (acc, issue) => {
-      acc[issue.status]++;
+      acc[issue.status as keyof IssueCountType]++;
       return acc;
     },
     {
