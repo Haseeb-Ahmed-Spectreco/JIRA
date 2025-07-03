@@ -2,7 +2,6 @@ import { Fragment, useState } from "react";
 import { useIssues } from "@/hooks/query-hooks/use-issues";
 import { FaChevronDown } from "react-icons/fa";
 import clsx from "clsx";
-import { type IssueStatus } from "@prisma/client";
 import { type IssueType } from "@/utils/types";
 import { NotImplemented } from "@/components/not-implemented";
 import { capitalizeMany } from "@/utils/helpers";
@@ -19,6 +18,7 @@ import {
   SelectViewport,
 } from "@/components/ui/select";
 import { useIsAuthenticated } from "@/hooks/use-is-authed";
+import { IssueStatus } from "@/types/enum";
 
 export const statuses: StatusObject[] = [
   {
@@ -84,7 +84,7 @@ const IssueSelectStatus: React.FC<{
     const newStatus = statuses.find((status) => status.value == value)!;
     updateIssue({
       issueId,
-      status: value,
+      status: value as IssueStatus,
     });
     setSelected(newStatus);
   }
@@ -111,8 +111,8 @@ const IssueSelectStatus: React.FC<{
         >
           <SelectValue className="w-full whitespace-nowrap bg-transparent text-white">
             {variant == "sm"
-              ? statusMap[selected.value]
-              : capitalizeMany(statusMap[selected.value])}
+              ? statusMap[selected.value as IssueStatus]
+              : capitalizeMany(statusMap[selected.value as IssueStatus])}
           </SelectValue>
           <SelectIcon>
             <FaChevronDown className="text-xs" />
@@ -137,7 +137,7 @@ const IssueSelectStatus: React.FC<{
                       style={{ color: status.smTextColor }}
                       className="rounded-md bg-opacity-30 px-2 text-xs font-semibold"
                     >
-                      {statusMap[status.value]}
+                      {statusMap[status.value as IssueStatus]}
                     </span>
                   </SelectItem>
                 ))}
