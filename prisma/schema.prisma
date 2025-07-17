@@ -44,6 +44,7 @@ model Issue {
     reporterId     String    @default("1")
     assigneeId     String?
     parentId       String?
+    imageUrl       String?
     sprintId       String?
     isDeleted      Boolean   @default(false)
     createdAt      DateTime  @default(now())
@@ -55,7 +56,6 @@ model Issue {
     comments Comment[]
     Sprint   Sprint?   @relation(fields: [sprintId], references: [id])
 
-    @@unique([key, creatorId])
     @@index([sprintId])
 }
 

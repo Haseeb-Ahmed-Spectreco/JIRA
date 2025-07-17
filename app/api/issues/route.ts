@@ -12,6 +12,9 @@ import {
   generateIssuesForClient,
 } from "@/utils/helpers";
 
+// Import your email service
+import {sendIssueUpdate} from "@/utils/emailService"
+
 const postIssuesBodyValidator = z.object({
   name: z.string(),
   type: z.enum(["BUG", "STORY", "TASK", "EPIC", "SUBTASK"]),
@@ -23,6 +26,7 @@ const postIssuesBodyValidator = z.object({
   sprintColor: z.string().nullable().optional(),
   userId: z.string().nullable(),
   details: z.string().optional(),
+  imageUrl: z.string().nullable().optional(),
 });
 
 export type PostIssueBody = z.infer<typeof postIssuesBodyValidator>;
@@ -39,15 +43,16 @@ const patchIssuesBodyValidator = z.object({
   sprintColor: z.string().nullable().optional(),
   userId: z.string().nullable().optional(),
   details: z.string().optional(),
+  imageUrl: z.string().nullable().optional(),
+  // Add flag to disable email notifications if needed
+  skipEmailNotification: z.boolean().optional(),
 });
-
-
 
 export type PatchIssuesBody = z.infer<typeof patchIssuesBodyValidator>;
 
-
 const deleteIssueBodyValidator = z.object({
-  ids: z.array(z.string()),   });
+  ids: z.array(z.string()),
+});
 
 export type DeleteIssueBody = z.infer<typeof deleteIssueBodyValidator>;
 
@@ -99,7 +104,6 @@ export async function GET(req: NextRequest) {
     const activeIssues = await prisma.issue.findMany({
       where: whereIssue,
       skip: offset,
-
       take: limit || undefined,
       orderBy: {
         createdAt: "desc",
@@ -165,10 +169,8 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ issues: issuesForClient });
 }
 
-// POST
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as { data: PostIssueBody };
-
   const data = body.data;
 
   console.log("Issues Data coming: ", data);
@@ -183,7 +185,6 @@ export async function POST(req: NextRequest) {
   }
 
   const { data: valid } = validated;
-
   console.log("Validated Data: ", valid);
 
   const userId = valid?.userId ?? "user_2PvBRngdvenUlFvQNAWbXIvYVy5";
@@ -203,25 +204,39 @@ export async function POST(req: NextRequest) {
   let boardPosition = -1;
 
   if (sprint && sprint.status === "ACTIVE") {
-    // If issue is created in active sprint, add it to the bottom of the TODO column in board
     const issuesInColum = currentSprintIssues.filter(
       (issue) => issue.status === "TODO"
     );
     boardPosition = calculateInsertPosition(issuesInColum);
   }
 
-  const k = issues.length + 1;
+  const generateNextKey = () => {
+    if (issues.length === 0) {
+      return "ISSUE-1";
+    }
+
+    const keyNumbers = issues
+      .map(issue => {
+        const match = issue.key.match(/ISSUE-(\d+)/);
+        return match ? parseInt(match[1] ?? "0", 10) : 0;
+      })
+      .filter(num => !isNaN(num));
+
+    const maxKeyNumber = Math.max(...keyNumbers, 0);
+    return `ISSUE-${maxKeyNumber + 1}`;
+  };
 
   const positionToInsert = calculateInsertPosition(currentSprintIssues);
 
   const issue = await prisma.issue.create({
     data: {
-      key: `ISSUE-${k}`,
+      key: generateNextKey(),
       name: valid.name,
       type: valid.type,
       status: valid.status ?? "TODO",
+      imageUrl: valid.imageUrl ?? null,
       assigneeId: valid.assigneeId ?? undefined,
-      reporterId: valid.reporterId ?? "user_2PwZmH2xP5aE0svR6hDH4AwDlcu", // Rogan as default reporter
+      reporterId: valid.reporterId ?? "user_2PwZmH2xP5aE0svR6hDH4AwDlcu",
       sprintId: valid.sprintId ?? undefined,
       details: valid.details,
       sprintPosition: positionToInsert,
@@ -231,34 +246,30 @@ export async function POST(req: NextRequest) {
       creatorId: userId,
     },
   });
-  // return NextResponse.json<PostIssueResponse>({ issue });
+  
   return NextResponse.json({ issue });
 }
 
 export async function PUT(req: NextRequest) {
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
   const body = (await req.json()) as { data: PatchIssuesBody };
-
   const data = body.data;
   const validated = patchIssuesBodyValidator.safeParse(data);
 
   if (!validated.success) {
-    // eslint-disable-next-line
-    const message = "Invalid body. " + validated.error.errors[0]?.message;
+    const message = `Invalid body. ${validated.error.errors[0]?.message ?? ""}`;
     return new Response(message, { status: 400 });
   }
 
   const { data: valid } = validated;
-    console.log("Issues Data coming: ", valid);
+  console.log("Issues Data coming: ", valid);
 
-
-   const  userId  = valid?.userId ?? "user_2PvBRngdvenUlFvQNAWbXIvYVy5";
+  const userId = valid?.userId ?? "user_2PvBRngdvenUlFvQNAWbXIvYVy5";
   if (!userId) return new Response("Unauthenticated request", { status: 403 });
 
-    const { success } = await ratelimit.limit(userId);
+  const { success } = await ratelimit.limit(userId);
   if (!success) return new Response("Too many requests", { status: 429 });
 
+  // Get the current issues before updating to track status changes
   const issuesToUpdate = await prisma.issue.findMany({
     where: {
       id: {
@@ -269,7 +280,10 @@ export async function PUT(req: NextRequest) {
 
   const updatedIssues = await Promise.all(
     issuesToUpdate.map(async (issue) => {
-      return await prisma.issue.update({
+      const oldStatus = issue.status;
+      const newStatus = valid?.status ?? issue.status;
+
+      const updatedIssue = await prisma.issue.update({
         where: {
           id: issue.id,
         },
@@ -277,46 +291,51 @@ export async function PUT(req: NextRequest) {
           name: valid?.name ?? issue?.name ?? null,
           details: valid?.details ?? issue?.details ?? null,
           type: valid?.type ?? issue?.type ?? null,
-          status: valid?.status ?? issue?.status ?? null,
+          imageUrl: valid?.imageUrl ?? valid.imageUrl ?? null,
+          status: newStatus,
           assigneeId: valid?.assigneeId ?? issue?.assigneeId ?? undefined,
           reporterId: valid?.reporterId ?? issue?.reporterId ?? undefined,
-          sprintId: valid?.sprintId  ?? issue?.sprintId ?? undefined,
+          sprintId: valid?.sprintId ?? issue?.sprintId ?? undefined,
           parentId: valid?.parentId ?? issue?.parentId ?? undefined,
         },
       });
+
+      
+      if (!valid.skipEmailNotification && oldStatus !== newStatus) {
+        // Send email asynchronously to avoid blocking the response
+        setImmediate(() => {
+          void sendIssueUpdate(issue, oldStatus, newStatus, userId)
+        });
+      }
+
+      return updatedIssue;
     })
   );
 
- 
-  // return NextResponse.json<PostIssueResponse>({ issue });
   return NextResponse.json({ issues: updatedIssues });
 }
 
- export async function DELETE(req : NextRequest) {
-    const body = (await req.json()) as  DeleteIssueBody ;
+export async function DELETE(req: NextRequest) {
+  const body = (await req.json()) as DeleteIssueBody;
+  const data = body;
+  console.log("Issues Data coming: ", data);
+  const validated = deleteIssueBodyValidator.safeParse(data);
 
-    const data = body;
-    console.log("Issues Data coming: ", data);
-    const validated = deleteIssueBodyValidator.safeParse(data);
-
-    if (!validated.success) {
-      // eslint-disable-next-line
-      const message = "Invalid body. " + validated.error.errors[0]?.message;
-      return new Response(message, { status: 400 });
-    }
-
-    const { data: valid } = validated;
-    console.log("Issues Data validated: ", valid);
-
-    const issuesDeleted = await prisma.issue.deleteMany({
-      where: {
-        id: {
-          in: valid.ids ?? [],
-        },
-      },
-    });
-
-      return NextResponse.json({ issues: issuesDeleted });
-
+  if (!validated.success) {
+    const message = `Invalid body. ${validated.error.errors[0]?.message ?? ""}`;
+    return new Response(message, { status: 400 });
   }
 
+  const { data: valid } = validated;
+  console.log("Issues Data validated: ", valid);
+
+  const issuesDeleted = await prisma.issue.deleteMany({
+    where: {
+      id: {
+        in: valid.ids ?? [],
+      },
+    },
+  });
+
+  return NextResponse.json({ issues: issuesDeleted });
+}

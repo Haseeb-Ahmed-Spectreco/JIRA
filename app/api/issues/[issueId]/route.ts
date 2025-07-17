@@ -10,6 +10,7 @@ import { clerkClient } from "@clerk/nextjs";
 import { filterUserForClient } from "@/utils/helpers";
 import { getAuth } from "@clerk/nextjs/server";
 import { IssueStatus, IssueType } from "@/types/enum";
+import { sendIssueUpdate} from "@/utils/emailService"
 
 export type GetIssueDetailsResponse = {
   issue: GetIssuesResponse["issues"][number] | null;
@@ -46,12 +47,15 @@ const patchIssueBodyValidator = z.object({
   status: z.nativeEnum(IssueStatus).optional(),
   sprintPosition: z.number().optional(),
   boardPosition: z.number().optional(),
+  imageUrl: z.string().optional(),
   assigneeId: z.string().nullable().optional(),
   reporterId: z.string().optional(),
   parentId: z.string().nullable().optional(),
   sprintId: z.string().nullable().optional(),
   isDeleted: z.boolean().optional(),
   sprintColor: z.string().optional(),
+  skipEmailNotification: z.boolean().optional(),
+
 });
 
 export type PatchIssueBody = z.infer<typeof patchIssueBodyValidator>;
@@ -77,7 +81,7 @@ export async function PATCH(req: NextRequest, { params }: ParamsType) {
   const body = await req.json();
   console.log("Issues Body: ", body)
   const validated = patchIssueBodyValidator.safeParse(body);
-console.log("Issues Validated: ", validated)
+  console.log("Issues Validated: ", validated)
   if (!validated.success) {
     // eslint-disable-next-line
     const message = "Invalid body. " + validated.error.errors[0]?.message;
@@ -105,6 +109,7 @@ console.log("Issues Validated: ", validated)
       description: valid.description ?? undefined,
       status: valid.status ?? undefined,
       type: valid.type ?? undefined,
+      imageUrl: valid.imageUrl ?? undefined,
       sprintPosition: valid.sprintPosition ?? undefined,
       assigneeId: valid.assigneeId === undefined ? undefined : valid.assigneeId,
       reporterId: valid.reporterId ?? undefined,
@@ -138,6 +143,20 @@ console.log("Issues Validated: ", validated)
       return new Response("Error fetching assignee", { status: 500 });
     }
   }
+
+
+  const oldStatus = currentIssue.status
+  const newStatus = valid?.status ?? issue.status
+
+  console.log("status updated", oldStatus, newStatus)
+
+  if (!valid.skipEmailNotification && oldStatus !== newStatus) {
+          // Send email asynchronously to avoid blocking the response
+          setImmediate(() => {
+            void sendIssueUpdate(issue, oldStatus, newStatus, userId)
+          });
+        }
+  
 
   // return NextResponse.json<PostIssueResponse>({ issue });
   return NextResponse.json({
