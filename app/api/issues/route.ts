@@ -58,6 +58,7 @@ export type DeleteIssueBody = z.infer<typeof deleteIssueBodyValidator>;
 
 type IssueT = Issue & {
   children: IssueT[];
+  type: any,
   sprintIsActive: boolean;
   parent: Issue & {
     sprintIsActive: boolean;

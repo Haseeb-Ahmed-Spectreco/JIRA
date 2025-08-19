@@ -84,7 +84,6 @@ export function generateInitialUserIssues(userId: string): Issue[] {
   const slicedUserId = userId ? userId.slice(5, 12) : "init"
 
   return [
-    // ... your existing issues array (keeping it short for brevity)
     {
       id: "1c5818e1-b920-45b2-" + slicedUserId,
       key: "ISSUE-12",
@@ -105,6 +104,7 @@ export function generateInitialUserIssues(userId: string): Issue[] {
       deletedAt: null,
       sprintColor: null,
       creatorId: userId,
+      imageUrl: null
     },
     // ... add all your other issues here
   ]
