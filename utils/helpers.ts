@@ -9,7 +9,7 @@ export function getBaseUrl() {
   if (typeof window === "undefined") {
     return ""; // SSR should use vercel url\// SSR should use vercel url\
   }
-  return process.env.BASE_URL;
+  return process.env.NEXT_PUBLIC_BASE_URL;
 }
 
 export function getHeaders() {
