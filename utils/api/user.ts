@@ -5,7 +5,7 @@ import {
 import { type DefaultUser } from "@prisma/client";
 import axios from "axios";
 
-const baseUrl = "http://localhost:3000";
+const baseUrl = process.env.BASE_URL;
 
 export const UserRoutes = {
   getUser: async () => {
