@@ -71,10 +71,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { issueId: string } }
 ) {
-  const { userId } = getAuth(req);
-  if (!userId) return new Response("Unauthenticated request", { status: 403 });
-  const { success } = await ratelimit.limit(userId);
-  if (!success) return new Response("Too many requests", { status: 429 });
+  // const { userId } = getAuth(req);
+  // if (!userId) return new Response("Unauthenticated request", { status: 403 });
+  // const { success } = await ratelimit.limit(userId);
+  // if (!success) return new Response("Too many requests", { status: 429 });
 
   const { issueId } = params;
   // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

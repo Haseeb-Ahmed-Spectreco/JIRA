@@ -13,14 +13,16 @@ const TopNavbar: React.FC = () => {
         <div className="relative mr-2 h-[50px] w-[150px]">
           <Image
             priority={true}
-            src="https://cdn-ilcaioh.nitrocdn.com/tVywMbvOOHDiGAOcynXdoFQXNDRISAkU/assets/images/optimized/rev-9ba3d72/spectreco.com/wp-content/uploads/2024/06/logo.png"
+            src="https://res.cloudinary.com/drazmyjze/image/upload/v1762845389/logo1_1_ur0x5k.png"
             alt="Jira logo"
             fill
             sizes="(max-width: 300px) 100px, 150px"
             className="object-contain" // Force auto dimensions
           />
         </div>
-        <span className="text-sm font-medium text-gray-600">Jira Clone</span>
+        <span className="text-sm font-medium text-gray-600">
+          Spectreco Support
+        </span>
       </div>
       {user ? (
         <div className="flex items-center gap-x-2">

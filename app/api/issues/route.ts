@@ -3,6 +3,8 @@ import { prisma, ratelimit } from "@/server/db";
 import {
   type Issue,
   type DefaultUser,
+  type Comment,
+  type Sprint,
 } from "@prisma/client";
 import { z } from "zod";
 import { clerkClient } from "@clerk/nextjs/server";
@@ -18,13 +20,13 @@ import {sendIssueUpdate} from "@/utils/emailService"
 const postIssuesBodyValidator = z.object({
   name: z.string(),
   type: z.enum(["BUG", "STORY", "TASK", "EPIC", "SUBTASK"]),
-  assigneeId: z.string().nullable(),
+  assigneeId: z.string().nullable().optional(),
   status: z.enum(["TODO", "IN_PROGRESS", "DONE"]).optional(),
-  sprintId: z.string().nullable(),
-  reporterId: z.string().nullable(),
-  parentId: z.string().nullable(),
+  sprintId: z.string().nullable().optional(),
+  reporterId: z.string().nullable().optional(),
+  parentId: z.string().nullable().optional(),
   sprintColor: z.string().nullable().optional(),
-  userId: z.string().nullable(),
+  userId: z.string().nullable().optional(),
   details: z.string().optional(),
   imageUrl: z.string().nullable().optional(),
 });
@@ -56,6 +58,10 @@ const deleteIssueBodyValidator = z.object({
 
 export type DeleteIssueBody = z.infer<typeof deleteIssueBodyValidator>;
 
+export type CommentWithAuthor = Comment & {
+  author: DefaultUser | null;
+};
+
 type IssueT = Issue & {
   children: IssueT[];
   type: any,
@@ -70,6 +76,7 @@ type IssueT = Issue & {
   assignee: DefaultUser | null;
   reporter: DefaultUser | null;
   userId: string | null;
+  comments: CommentWithAuthor[] | null;
 };
 
 export type GetIssuesResponse = {
@@ -126,10 +133,46 @@ export async function GET(req: NextRequest) {
       },
     });
 
+    const comments = await prisma.comment.findMany({
+      where: {
+        issueId: {
+          in: activeIssues.map((issue: Issue) => issue.id),
+        },
+      },
+    });
+
+    const commentAuthorIds = comments.map((comment: Comment) => comment.authorId);
+    let commentUsers: DefaultUser[] = [];
+    
+    if (commentAuthorIds.length > 0) {
+      commentUsers = await prisma.defaultUser.findMany({
+        where: {
+          id: {
+            in: commentAuthorIds,
+          },
+        },
+      });
+
+      const clerkCommentUsers = (
+        await clerkClient.users.getUserList({
+          userId: commentAuthorIds,
+          limit: 110,
+        })
+      ).map(filterUserForClient);
+
+      commentUsers.push(...clerkCommentUsers);
+    }
+
+    const commentsWithAuthors: CommentWithAuthor[] = comments.map((comment: Comment) => {
+      const author = commentUsers.find((u: DefaultUser) => u.id === comment.authorId) ?? null;
+      return { ...comment, author };
+    });
+
     const issuesForClient = generateIssuesForClient(
       activeIssues,
       users,
-      activeSprints.map((sprint) => sprint.id)
+      activeSprints.map((sprint: Sprint) => sprint.id),
+      commentsWithAuthors
     );
 
     return NextResponse.json({
@@ -161,11 +204,49 @@ export async function GET(req: NextRequest) {
 
   users.push(...clerkUsers);
 
+  const comments = await prisma.comment.findMany({
+    where: {
+      issueId: {
+        in: totalIssues.map((issue: Issue) => issue.id),
+      },
+    },
+  });
+
+  const commentAuthorIds = comments.map((comment: Comment) => comment.authorId);
+  let commentUsers: DefaultUser[] = [];
+  
+  if (commentAuthorIds.length > 0) {
+    commentUsers = await prisma.defaultUser.findMany({
+      where: {
+        id: {
+          in: commentAuthorIds,
+        },
+      },
+    });
+
+    const clerkCommentUsers = (
+      await clerkClient.users.getUserList({
+        userId: commentAuthorIds,
+        limit: 110,
+      })
+    ).map(filterUserForClient);
+
+    commentUsers.push(...clerkCommentUsers);
+  }
+
+  const commentsWithAuthors: CommentWithAuthor[] = comments.map((comment: Comment) => {
+    const author = commentUsers.find((u: DefaultUser) => u.id === comment.authorId) ?? null;
+    return { ...comment, author };
+  });
+
   const issuesForClient = generateIssuesForClient(
     totalIssues,
     users,
-    activeSprints.map((sprint) => sprint.id)
+    activeSprints.map((sprint: Sprint) => sprint.id),
+    commentsWithAuthors
   );
+
+  console.log("Issues for Client: ", issuesForClient);
 
   return NextResponse.json({ issues: issuesForClient });
 }

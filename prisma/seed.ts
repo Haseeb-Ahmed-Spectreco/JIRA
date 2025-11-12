@@ -131,9 +131,12 @@ async function main() {
 }
 
 main()
+  .then(async () => {
+    await prisma.$disconnect()
+  })
   .catch(async (e) => {
     console.error("❌ Error during seeding:", e)
-     await prisma.$disconnect()
+    await prisma.$disconnect()
     process.exit(1)
   })
 

@@ -2,8 +2,10 @@ import { type IssueCountType } from "./types";
 import { type IssueType } from "@/utils/types";
 import { type clerkClient } from "@clerk/nextjs";
 import { type DefaultUser, type Issue } from "@prisma/client";
+import { type CommentWithAuthor } from "@/app/api/issues/route";
 
 type Value<T> = T extends Promise<infer U> ? U : T;
+
 
 export function getBaseUrl() {
   if (typeof window === "undefined") {
@@ -125,7 +127,7 @@ export function issueTypeNotInFilters({
   issue: IssueType;
   issueTypes: string[];
 }) {
-  return issueTypes.length && !issueTypes.includes(issue.type);
+  return issueTypes.length && !issueTypes.includes(issue.type as string);
 }
 
 export function issueSprintNotInFilters({
@@ -167,7 +169,8 @@ export function hexToRgba(hex: string | null, opacity?: number) {
 export function generateIssuesForClient(
   issues: Issue[],
   users: DefaultUser [],
-  activeSprintIds?: string[]
+  activeSprintIds?: string[],
+  comments?: CommentWithAuthor[]
 ) {
   const userMap = new Map(users.map((user) => [user.id, user]));
   const parentMap = new Map(issues.map((issue) => [issue.id, issue]));
@@ -183,7 +186,14 @@ export function generateIssuesForClient(
         return Object.assign(issue, { assignee });
       });
     const sprintIsActive = activeSprintIds?.includes(issue.sprintId ?? "");
-    return { ...issue, sprintIsActive, parent, assignee, reporter, children };
+    const commentsForIssue = comments?.filter((comment: CommentWithAuthor) => comment.issueId === issue.id) ?? [];
+    // Sort comments by timestamp (oldest first, latest at end)
+    const sortedComments = commentsForIssue.sort((a, b) => {
+      const dateA = new Date(a.createdAt).getTime();
+      const dateB = new Date(b.createdAt).getTime();
+      return dateA - dateB; // Ascending order (oldest first, latest at end)
+    });
+    return { ...issue, sprintIsActive, parent, assignee, reporter, children, comments: sortedComments };
   });
 
   return issuesForClient.sort((a, b) => {

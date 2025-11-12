@@ -3,9 +3,10 @@ import { prisma, ratelimit } from "@/server/db";
 import {
   type Issue,
   type DefaultUser,
+  type Comment,
 } from "@prisma/client";
 import { z } from "zod";
-import { type GetIssuesResponse } from "../route";
+import { type GetIssuesResponse, type CommentWithAuthor } from "../route";
 import { clerkClient } from "@clerk/nextjs";
 import { filterUserForClient } from "@/utils/helpers";
 import { getAuth } from "@clerk/nextjs/server";
@@ -23,21 +24,85 @@ export async function GET(
   { params }: { params: { issueId: string } }
 ) {
   const { issueId } = params;
+  const { searchParams } = new URL(req.url);
+  const includeComments = searchParams.get("includeComments") === "true";
+
   const issue = await prisma.issue.findUnique({
     where: {
       id: issueId,
     },
   });
-  if (!issue?.parentId) {
-    return NextResponse.json({ issue: { ...issue, parent: null } });
+
+  if (!issue) {
+    return NextResponse.json({ issue: null });
   }
+
+  let comments: CommentWithAuthor[] | null = null;
+
+  if (includeComments) {
+    const issueComments = await prisma.comment.findMany({
+      where: {
+        issueId: issueId,
+      },
+    });
+
+    const commentAuthorIds = issueComments.map((comment: Comment) => comment.authorId);
+    let commentUsers: DefaultUser[] = [];
+    
+    if (commentAuthorIds.length > 0) {
+      commentUsers = await prisma.defaultUser.findMany({
+        where: {
+          id: {
+            in: commentAuthorIds,
+          },
+        },
+      });
+
+      const clerkCommentUsers = (
+        await clerkClient.users.getUserList({
+          userId: commentAuthorIds,
+          limit: 110,
+        })
+      ).map(filterUserForClient);
+
+      commentUsers.push(...clerkCommentUsers);
+    }
+
+    comments = issueComments
+      .map((comment: Comment) => {
+        const author = commentUsers.find((u: DefaultUser) => u.id === comment.authorId) ?? null;
+        return { ...comment, author };
+      })
+      .sort((a, b) => {
+        const dateA = new Date(a.createdAt).getTime();
+        const dateB = new Date(b.createdAt).getTime();
+        return dateA - dateB; // Ascending order (oldest first, latest at end)
+      });
+  }
+
+  if (!issue.parentId) {
+    return NextResponse.json({ 
+      issue: { 
+        ...issue, 
+        parent: null,
+        comments: comments ?? null,
+      } 
+    });
+  }
+
   const parent = await prisma.issue.findUnique({
     where: {
       id: issue.parentId,
     },
   });
-  // return NextResponse.json<GetIssueDetailsResponse>({ issue });
-  return NextResponse.json({ issue: { ...issue, parent } });
+
+  return NextResponse.json({ 
+    issue: { 
+      ...issue, 
+      parent,
+      comments: comments ?? null,
+    } 
+  });
 }
 
 const patchIssueBodyValidator = z.object({
@@ -165,12 +230,15 @@ export async function PATCH(req: NextRequest, { params }: ParamsType) {
 }
 
 export async function DELETE(req: NextRequest, { params }: ParamsType) {
-  const { userId } = getAuth(req);
+  const { searchParams } = new URL(req.url);
+  console.log("Issues Body: ", req);
+  const userId = searchParams.get("userId") ?? getAuth(req).userId;
   if (!userId) return new Response("Unauthenticated request", { status: 403 });
   const { success } = await ratelimit.limit(userId);
   if (!success) return new Response("Too many requests", { status: 429 });
-
   const { issueId } = params;
+
+
 
   const issue = await prisma.issue.update({
     where: {
@@ -180,7 +248,7 @@ export async function DELETE(req: NextRequest, { params }: ParamsType) {
       isDeleted: true,
       boardPosition: -1,
       sprintPosition: -1,
-      sprintId: "DELETED-SPRINT-ID",
+      sprintId: null,
     },
   });
 

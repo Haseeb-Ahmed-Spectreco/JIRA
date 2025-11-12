@@ -91,9 +91,17 @@ model Comment {
     @@index([issueId])
 }
 
+enum UserType {
+    DEV
+    CLIENT
+}
+
 model DefaultUser {
-    id     String  @id
-    name   String
-    email  String  @unique
-    avatar String?
+    id         String    @id @default(uuid())
+    name       String
+    email      String    @unique
+    avatar     String?
+    company_id String?
+    site_code  String?
+    type       UserType  @default(DEV)
 }

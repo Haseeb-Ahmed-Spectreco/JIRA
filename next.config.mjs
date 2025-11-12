@@ -30,17 +30,10 @@ const config = {
       "avatars.githubusercontent.com",
       "img.clerk.com",
       "cdn-ilcaioh.nitrocdn.com",
+      "platform.spectreco.com",
+      "spectreco-bucket.s3.amazonaws.com",
+      "res.cloudinary.com",
     ],
   },
-  /**
-   * If you have the "experimental: { appDir: true }" setting enabled, then you
-   * must comment the below `i18n` config out.
-   *
-   * @see https://github.com/vercel/next.js/issues/41980
-   */
-  // i18n: {
-  //   locales: ["en"],
-  //   defaultLocale: "en",
-  // },
 };
 export default config;

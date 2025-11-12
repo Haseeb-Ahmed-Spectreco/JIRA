@@ -57,6 +57,31 @@ export async function POST(req: NextRequest, { params }: MembersParams) {
   console.log("Project ID: ", project_id);
   console.log("User ID: ", userId);
 
+  // Create project if it doesn't exist
+  await prisma.project.upsert({
+    where: { id: project_id },
+    update: {},
+    create: {
+      id: project_id,
+      key: `PROJ-${project_id.slice(0, 8).toUpperCase()}`,
+      name: `Project ${project_id.slice(0, 8)}`,
+    },
+  });
+
+  // Check if member already exists (since id is the primary key)
+  const existingMember = await prisma.member.findUnique({
+    where: {
+      id: userId,
+    },
+  });
+
+  if (existingMember) {
+    return NextResponse.json(
+      { error: "Member already exists" },
+      { status: 409 }
+    );
+  }
+
   const member = await prisma.member.create({
     data: {
       id: userId,

@@ -116,6 +116,9 @@ export interface DefaultUser {
   name: string
   email: string
   avatar: string | null
+  company_id?: string | null
+  site_code?: string | null
+  type?: "DEV" | "CLIENT"
 }
 
 // Make sure to EXPORT defaultUsers

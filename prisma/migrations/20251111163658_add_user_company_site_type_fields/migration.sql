@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE `DefaultUser` ADD COLUMN `company_id` VARCHAR(191) NULL,
+ADD COLUMN `site_code` VARCHAR(191) NULL,
+ADD COLUMN `type` ENUM('DEV', 'CLIENT') NOT NULL DEFAULT 'DEV';
+

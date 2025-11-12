@@ -17,7 +17,7 @@ import {
   type PostCommentBody,
 } from "@/app/api/issues/[issueId]/comments/route";
 
-const baseUrl = getBaseUrl();
+const baseUrl = getBaseUrl() || "";
 
 export const issuesRoutes = {
   getIssues: async ({ signal }: { signal?: AbortSignal }) => {
@@ -35,10 +35,18 @@ export const issuesRoutes = {
     );
     return data?.issues;
   },
-  getIssueDetails: async ({ issueId }: { issueId: string }) => {
-    const { data } = await axios.get<GetIssueDetailsResponse>(
-      `${baseUrl}/api/issues/${issueId}`
-    );
+  getIssueDetails: async ({ 
+    issueId, 
+    includeComments 
+  }: { 
+    issueId: string; 
+    includeComments?: boolean;
+  }) => {
+    let url = `${baseUrl}/api/issues/${issueId}`;
+    if (includeComments) {
+      url += "?includeComments=true";
+    }
+    const { data } = await axios.get<GetIssueDetailsResponse>(url);
     return data?.issue;
   },
   postIssue: async (body: { data: PostIssueBody }) => {

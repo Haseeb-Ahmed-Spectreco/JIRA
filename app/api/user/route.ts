@@ -1,17 +1,26 @@
 import { prisma } from "@/server/db";
-import { type DefaultUser } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
-  const body = (await req.json()) as DefaultUser;
+  const body = await req.json() as {
+    email: string;
+    name: string;
+    avatar?: string | null;
+    company_id?: string | null;
+    site_code?: string | null;
+    type?: "DEV" | "CLIENT";
+  };
   console.log("User Body: ", body);
   const user = await prisma.defaultUser.create({
     data: {
-      id: body.id,
       email: body.email,
       name: body.name,
-      avatar: body.avatar,
-    },
+      avatar: body.avatar ?? null,
+      company_id: body.company_id ?? null,
+      site_code: body.site_code ?? null,
+      type: body.type ?? "DEV",
+    } as Prisma.DefaultUserCreateInput,
   });
 
   return NextResponse.json({ user: user });

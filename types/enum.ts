@@ -27,8 +27,14 @@ export const Duration = {
   CUSTOM: "CUSTOM",
 } as const
 
+export const UserType = {
+  DEV: "DEV",
+  CLIENT: "CLIENT",
+} as const
+
 // Create TypeScript types from the const objects
 export type IssueType = (typeof IssueType)[keyof typeof IssueType]
 export type IssueStatus = (typeof IssueStatus)[keyof typeof IssueStatus]
 export type SprintStatus = (typeof SprintStatus)[keyof typeof SprintStatus]
 export type Duration = (typeof Duration)[keyof typeof Duration]
+export type UserType = (typeof UserType)[keyof typeof UserType]
