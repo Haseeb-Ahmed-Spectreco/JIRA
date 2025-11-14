@@ -5,6 +5,11 @@ export default withClerkMiddleware((req: Request) => {
   const res = NextResponse.next();
   const origin = req.headers.get("origin");
 
+  // Log DELETE requests to debug
+  if (req.method === "DELETE") {
+    console.log("Middleware: DELETE request detected", req.url);
+  }
+
   if (req.method === "OPTIONS") {
     return new NextResponse(null, {
       headers: {
@@ -30,3 +35,16 @@ export default withClerkMiddleware((req: Request) => {
 
   return res;
 });
+
+// Configure middleware to run on API routes
+export const config = {
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
+};

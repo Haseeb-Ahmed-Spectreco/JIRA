@@ -398,26 +398,31 @@ export async function PUT(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const body = (await req.json()) as DeleteIssueBody;
-  const data = body;
-  console.log("Issues Data coming: ", data);
-  const validated = deleteIssueBodyValidator.safeParse(data);
+  const { searchParams } = new URL(req.url);
+  const issueId = searchParams.get("id");
 
-  if (!validated.success) {
-    const message = `Invalid body. ${validated.error.errors[0]?.message ?? ""}`;
-    return new Response(message, { status: 400 });
+  if (!issueId) {
+    return NextResponse.json(
+      { error: "Issue ID is required. Use ?id=<issue-id>" },
+      { status: 400 }
+    );
   }
 
-  const { data: valid } = validated;
-  console.log("Issues Data validated: ", valid);
+  console.log("Deleting issue with ID:", issueId);
 
-  const issuesDeleted = await prisma.issue.deleteMany({
+  // Delete related comments first to avoid foreign key constraint violation
+  await prisma.comment.deleteMany({
     where: {
-      id: {
-        in: valid.ids ?? [],
-      },
+      issueId: issueId,
     },
   });
 
-  return NextResponse.json({ issues: issuesDeleted });
+  // Now delete the issue
+  const issueDeleted = await prisma.issue.delete({
+    where: {
+      id: issueId,
+    },
+  });
+
+  return NextResponse.json({ issue: issueDeleted });
 }
