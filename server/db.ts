@@ -28,3 +28,18 @@ if (typeof process !== "undefined") {
     void prisma.$disconnect();
   });
 }
+
+/**
+ * Check if a user is an admin by their user ID
+ * @param userId - The user ID to check
+ * @returns Promise<boolean> - True if user is admin, false otherwise
+ */
+export async function isUserAdmin(userId: string | null | undefined): Promise<boolean> {
+  if (!userId) return false;
+  
+  const user = await prisma.defaultUser.findUnique({
+    where: { id: userId },
+  });
+  
+  return (user as { is_admin?: boolean } | null)?.is_admin === true;
+}

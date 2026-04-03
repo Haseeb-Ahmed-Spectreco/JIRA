@@ -225,3 +225,7 @@ export function getPluralEnd<T>(arr: T[]) {
   if (arr.length == 0) return "s";
   return arr.length > 1 ? "s" : "";
 }
+
+export function isAdmin(user: DefaultUser | null | undefined): boolean {
+  return (user as { is_admin?: boolean } | null | undefined)?.is_admin === true;
+}
