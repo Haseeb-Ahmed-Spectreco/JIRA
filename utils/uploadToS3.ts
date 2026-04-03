@@ -85,6 +85,50 @@ export const uploadToS3 = async (
   }
 };
 
+export const uploadBase64ToS3 = async (
+  base64Data: string,
+  mimeType = "image/png"
+): Promise<UploadResult> => {
+  const region = process.env.NEXT_PUBLIC_AWS_REGION;
+  const accessKeyId = process.env.NEXT_PUBLIC_S3_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.NEXT_PUBLIC_S3_SECRET_ACCESS_KEY;
+  const bucketName = process.env.NEXT_PUBLIC_S3_BUCKET_NAME;
+
+  if (!region || !accessKeyId || !secretAccessKey || !bucketName) {
+    return { success: false, error: "Missing required AWS configuration" };
+  }
+
+  const raw = base64Data.includes(",") ? base64Data.split(",")[1]! : base64Data;
+  const detectedMime = base64Data.match(/^data:(.+?);base64/)?.[1] ?? mimeType;
+  const ext = detectedMime.split("/")[1] ?? "png";
+
+  const buffer = Buffer.from(raw, "base64");
+  const fileName = `uploads/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+
+  try {
+    const client = new S3Client({
+      region,
+    });
+
+    await client.send(
+      new PutObjectCommand({
+        Bucket: bucketName,
+        Key: fileName,
+        Body: buffer,
+        ContentType: detectedMime,
+      })
+    );
+
+    const fileUrl = `https://${bucketName}.s3.${region}.amazonaws.com/${fileName}`;
+    return { success: true, url: fileUrl };
+  } catch (error) {
+    console.error("S3 Base64 Upload Error:", error);
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown upload error";
+    return { success: false, error: errorMessage };
+  }
+};
+
 // Alternative version with better type safety for environment variables
 export const uploadToS3Safe = async (
   file: File,

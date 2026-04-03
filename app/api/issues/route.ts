@@ -13,6 +13,7 @@ import {
   filterUserForClient,
   generateIssuesForClient,
 } from "@/utils/helpers";
+import { uploadBase64ToS3 } from "@/utils/uploadToS3";
 
 // Import your email service
 import {sendIssueUpdate} from "@/utils/emailService"
@@ -28,7 +29,7 @@ const postIssuesBodyValidator = z.object({
   sprintColor: z.string().nullable().optional(),
   userId: z.string().nullable().optional(),
   details: z.string().optional(),
-  imageUrl: z.string().nullable().optional(),
+  imageBase64: z.string().nullable().optional(),
 });
 
 export type PostIssueBody = z.infer<typeof postIssuesBodyValidator>;
@@ -310,13 +311,25 @@ export async function POST(req: NextRequest) {
 
   const positionToInsert = calculateInsertPosition(currentSprintIssues);
 
+  let imageUrl: string | null = null;
+  if (valid.imageBase64) {
+    const uploadResult = await uploadBase64ToS3(valid.imageBase64);
+    if (!uploadResult.success || !uploadResult.url) {
+      return new Response(
+        `Image upload failed: ${uploadResult.error ?? "Unknown error"}`,
+        { status: 500 }
+      );
+    }
+    imageUrl = uploadResult.url;
+  }
+
   const issue = await prisma.issue.create({
     data: {
       key: generateNextKey(),
       name: valid.name,
       type: valid.type,
       status: valid.status ?? "TODO",
-      imageUrl: valid.imageUrl ?? null,
+      imageUrl,
       assigneeId: valid.assigneeId ?? undefined,
       reporterId: valid.reporterId ?? "user_2PwZmH2xP5aE0svR6hDH4AwDlcu",
       sprintId: valid.sprintId ?? undefined,
